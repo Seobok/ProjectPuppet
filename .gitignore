@@ -45,6 +45,20 @@
 # Visual Studio cache directory
 .vs/
 
+# JetBrains Rider local workspace settings
+/.idea/
+
+# Project-local temporary tools and scratch files
+/tmp/
+
+# Unity AI Assistant local workflow preferences
+/ProjectSettings/Packages/com.unity.ai.assistant/Settings.json
+
+# OS-generated folder metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
+
 # Gradle cache directory
 .gradle/
 
