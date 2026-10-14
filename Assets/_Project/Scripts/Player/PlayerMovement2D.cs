@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Rigidbody2D))]
@@ -10,15 +11,21 @@ public sealed class PlayerMovement2D : MonoBehaviour
     private static readonly int Jump = Animator.StringToHash("Jump");
     private static readonly int VerticalSpeed = Animator.StringToHash("verticalSpeed");
     private static readonly int WallSlide = Animator.StringToHash("IsWallSlide");
-    [SerializeField, Min(0f)] private float moveSpeed = 5f;
-    [SerializeField, Min(0f)] private float jumpSpeed = 8f;
-    [SerializeField, Min(0.1f)] private float wallSlideSpeed = 3f;
+    
+    [Header("InputAction")]
+    [SerializeField] private InputActionAsset inputActions;
+    [Header("Components")]
+    [SerializeField] private SpriteRenderer spriteRenderer;
+    [SerializeField] private Animator animator;
+    [SerializeField] private PlayerCombat combat;
+    [Header("Ground Check")]
     [SerializeField] private Transform groundCheck;
     [SerializeField] private Vector2 groundCheckSize = new Vector2(0.3f, 0.1f);
     [SerializeField] private LayerMask groundLayer;
-    [SerializeField] private InputActionAsset inputActions;
-    [SerializeField] private SpriteRenderer spriteRenderer;
-    [SerializeField] private Animator animator;
+    [Header("Movement Settings")]
+    [SerializeField, Min(0f)] private float moveSpeed = 5f;
+    [SerializeField, Min(0f)] private float jumpSpeed = 8f;
+    [SerializeField, Min(0.1f)] private float wallSlideSpeed = 3f;
 
     private Rigidbody2D body;
     private InputActionAsset runtimeActions;
@@ -38,6 +45,8 @@ public sealed class PlayerMovement2D : MonoBehaviour
             spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         if (animator == null)
             animator = GetComponentInChildren<Animator>();
+        if(combat == null)
+            combat = GetComponent<PlayerCombat>();
 
         if (inputActions == null)
         {
@@ -60,20 +69,21 @@ public sealed class PlayerMovement2D : MonoBehaviour
             jumpAction.Enable();
         }
     }
-
-    private void OnJump(InputAction.CallbackContext context)
-    {
-        jumpRequested = true;
-    }
-
+    
     private void FixedUpdate()
     {
         IsGrounded = CheckGrounded();
         IsWallSlide = false;
-        float horizontal = moveAction.ReadValue<Vector2>().x;
+        bool blocked = combat != null && combat.BlocksMovement;
+        
+        // 이동
+        float horizontal = 0f;
+        if(!blocked)
+            horizontal = moveAction.ReadValue<Vector2>().x;
         body.linearVelocity = new Vector2(horizontal * moveSpeed, body.linearVelocity.y);
 
-        if (jumpRequested && IsGrounded)
+        // 점프
+        if (jumpRequested && IsGrounded && !blocked)
         {
             body.linearVelocity = new Vector2(body.linearVelocity.x, jumpSpeed);
             IsGrounded = false;
@@ -81,6 +91,7 @@ public sealed class PlayerMovement2D : MonoBehaviour
         }
         jumpRequested = false;
 
+        // 벽타기
         if (!IsGrounded && body.linearVelocity.y < -wallSlideSpeed && IsPressingIntoWall(horizontal))
         {
             body.linearVelocity = new Vector2(body.linearVelocity.x, -wallSlideSpeed);
@@ -101,6 +112,12 @@ public sealed class PlayerMovement2D : MonoBehaviour
         }
     }
 
+    // Jump 버튼 입력 이벤트
+    private void OnJump(InputAction.CallbackContext context)
+    {
+        jumpRequested = true;
+    }
+
     private bool IsPressingIntoWall(float horizontal)
     {
         if (Mathf.Abs(horizontal) < 0.01f)
@@ -110,7 +127,6 @@ public sealed class PlayerMovement2D : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             Vector2 normal = wallContacts[i].normal;
-            // Only near-vertical surfaces facing against the input count as walls.
             if (Mathf.Abs(normal.x) > 0.9f && normal.x * horizontal < 0f)
                 return true;
         }
