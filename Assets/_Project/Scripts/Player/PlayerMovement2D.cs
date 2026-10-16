@@ -3,6 +3,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 
 [DisallowMultipleComponent]
+[DefaultExecutionOrder(-100)]
 [RequireComponent(typeof(Rigidbody2D))]
 public sealed class PlayerMovement2D : MonoBehaviour
 {
@@ -32,6 +33,9 @@ public sealed class PlayerMovement2D : MonoBehaviour
     private InputAction moveAction;
     private InputAction jumpAction;
     private bool jumpRequested;
+    private PlayerDodge dodge;
+    private PlayerHealth health;
+    public InputActionAsset Actions => runtimeActions;
     private readonly Collider2D[] groundHits = new Collider2D[8];
     private readonly ContactPoint2D[] wallContacts = new ContactPoint2D[16];
 
@@ -41,6 +45,8 @@ public sealed class PlayerMovement2D : MonoBehaviour
     private void Awake()
     {
         body = GetComponent<Rigidbody2D>();
+        dodge = GetComponent<PlayerDodge>();
+        health = GetComponent<PlayerHealth>();
         if (spriteRenderer == null)
             spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         if (animator == null)
@@ -74,25 +80,31 @@ public sealed class PlayerMovement2D : MonoBehaviour
     {
         IsGrounded = CheckGrounded();
         IsWallSlide = false;
-        bool blocked = combat != null && combat.BlocksMovement;
+        
+        float input = moveAction != null ? moveAction.ReadValue<Vector2>().x : 0f;
+        // 회피
+        if (dodge != null && dodge.isActiveAndEnabled)
+            dodge.Tick(Time.fixedDeltaTime, IsGrounded, input);
+        bool dodging = dodge != null && dodge.IsDodging;
+        bool blocked = dodging || (health != null && health.IsDead) || (combat != null && combat.BlocksMovement);
         
         // 이동
         float horizontal = 0f;
         if(!blocked)
-            horizontal = moveAction.ReadValue<Vector2>().x;
-        body.linearVelocity = new Vector2(horizontal * moveSpeed, body.linearVelocity.y);
+            horizontal = input;
+        body.linearVelocity = new Vector2(dodging ? dodge.HorizontalVelocity : horizontal * moveSpeed, body.linearVelocity.y);
 
         // 점프
         if (jumpRequested && IsGrounded && !blocked)
         {
             body.linearVelocity = new Vector2(body.linearVelocity.x, jumpSpeed);
             IsGrounded = false;
-            animator.SetTrigger(Jump);
+            if (animator != null) animator.SetTrigger(Jump);
         }
         jumpRequested = false;
 
         // 벽타기
-        if (!IsGrounded && body.linearVelocity.y < -wallSlideSpeed && IsPressingIntoWall(horizontal))
+        if (!blocked && !IsGrounded && body.linearVelocity.y < -wallSlideSpeed && IsPressingIntoWall(horizontal))
         {
             body.linearVelocity = new Vector2(body.linearVelocity.x, -wallSlideSpeed);
             IsWallSlide = true;
@@ -152,6 +164,7 @@ public sealed class PlayerMovement2D : MonoBehaviour
 
     private void OnDisable()
     {
+        dodge?.Cancel();
         moveAction?.Disable();
         if (jumpAction != null)
         {

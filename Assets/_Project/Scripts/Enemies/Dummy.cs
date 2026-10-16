@@ -1,7 +1,9 @@
 using UnityEngine;
 
-public class Dummy : MonoBehaviour, IAttackReceiver
+public sealed class Dummy : MonoBehaviour, IAttackReceiver
 {
+    [SerializeField] private AttackResult dummyType;
+    
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -16,6 +18,6 @@ public class Dummy : MonoBehaviour, IAttackReceiver
 
     public AttackResult ReceiveAttack(AttackInfo attack)
     {
-        return AttackResult.Parried;
+        return dummyType;
     }
 }

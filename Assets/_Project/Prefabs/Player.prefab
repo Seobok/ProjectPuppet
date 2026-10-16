@@ -44,6 +44,8 @@ GameObject:
   - component: {fileID: 6185247128048889632}
   - component: {fileID: 2075008178181222204}
   - component: {fileID: 5800254862339371728}
+  - component: {fileID: 3893804489070590232}
+  - component: {fileID: 496196302250898268}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -94,7 +96,7 @@ Rigidbody2D:
     m_Bits: 0
   m_Interpolate: 1
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 4
 --- !u!70 &6185247128048889632
 CapsuleCollider2D:
@@ -179,6 +181,46 @@ MonoBehaviour:
     m_Bits: 512
   attackDamage: 10
   recoilDuration: 0.25
+--- !u!114 &3893804489070590232
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1450032061898963819}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33e6a7b512f3d804c89e176801c0a008, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDodge
+  dodgeAnimation: {fileID: 7400000, guid: d0a4093ee0ec55147bac14be99a1f772, type: 2}
+  distance: 2.5
+  moveDuration: 0.2
+  invulnerableDuration: 0.14
+  recoveryDuration: 0.08
+  attackBufferDuration: 0.1
+  enemyBodyLayers:
+    serializedVersion: 2
+    m_Bits: 512
+--- !u!114 &496196302250898268
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1450032061898963819}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1b39185f8dd9804c960daeaec8494d9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
+  maxHealth: 100
+  onHit:
+    m_PersistentCalls:
+      m_Calls: []
+  onDeath:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &4014819215827543371
 GameObject:
   m_ObjectHideFlags: 0

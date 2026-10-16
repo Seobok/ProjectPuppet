@@ -270,7 +270,7 @@ GameObject:
   - component: {fileID: 1022430579}
   - component: {fileID: 1022430582}
   m_Layer: 9
-  m_Name: TX Village Props - Training Dummy
+  m_Name: Training Dummy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -391,8 +391,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 3.15, y: -0.68, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.61, y: 0.61, z: 0.61}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -408,6 +408,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd030dba91878124aa327acfbf2368a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DummyAttackReceiver
+  dummyType: 0
 --- !u!1 &1158698831
 GameObject:
   m_ObjectHideFlags: 0
@@ -690,10 +691,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
-    - target: {fileID: 3873104491076618637, guid: 0e7ea2cd9c92f7841ab319714c6377ec, type: 3}
-      propertyPath: m_Sprite
-      value: 
-      objectReference: {fileID: -3318188226485093758, guid: ae72133dacba6ec4eb33ecde48f50e56, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

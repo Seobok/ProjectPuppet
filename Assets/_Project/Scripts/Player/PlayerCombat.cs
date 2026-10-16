@@ -34,17 +34,22 @@ public sealed class PlayerCombat : MonoBehaviour
     private CombatState state;
     private float recoilRemaining;
     private bool hitboxActive;
+    private PlayerDodge dodge;
+    private PlayerHealth health;
+    private bool bufferedAttack;
     private readonly HashSet<IAttackReceiver> hitTargets = new HashSet<IAttackReceiver>();
     
     private float FacingDirection => spriteRenderer != null && spriteRenderer.flipX ? -1f : 1f;
-    private Vector2 AttackCenter => (Vector2)transform.position + new Vector2(attackTransform.localPosition.x * FacingDirection, attackTransform.localPosition.y);
+    private Vector2 AttackCenter => (Vector2)transform.position + (attackTransform != null ? new Vector2(attackTransform.localPosition.x * FacingDirection, attackTransform.localPosition.y) : Vector2.zero);
     public bool BlocksMovement => isActiveAndEnabled && state == CombatState.Attacking;
-    public bool CanAttack => state == CombatState.Idle;
-    public bool CanParry => state == CombatState.Idle;
-    public bool CanDodge => true;
+    public bool CanAttack => isActiveAndEnabled && state == CombatState.Idle && (dodge == null || !dodge.IsDodging) && (health == null || !health.IsDead);
+    public bool CanParry => CanAttack;
+    public bool CanDodge => isActiveAndEnabled && (dodge == null || !dodge.IsDodging) && (health == null || !health.IsDead);
 
     private void Awake()
     {
+        dodge = GetComponent<PlayerDodge>();
+        health = GetComponent<PlayerHealth>();
         if (animator == null)
             animator = GetComponentInChildren<Animator>();
         if(spriteRenderer == null)
@@ -105,6 +110,11 @@ public sealed class PlayerCombat : MonoBehaviour
     
     private void Update()
     {
+        if (bufferedAttack && (dodge == null || !dodge.IsDodging))
+        {
+            bufferedAttack = false;
+            TryAttack();
+        }
         // 반동 타이머
         if (state != CombatState.Recoil)
             return;
@@ -128,13 +138,25 @@ public sealed class PlayerCombat : MonoBehaviour
     // Attack 버튼 입력 이벤트
     private void OnAttack(InputAction.CallbackContext context)
     {
-        if (!CanAttack)
+        // 회피 중 공격시 예약
+        if (dodge != null && dodge.IsDodging)
+        {
+            if (dodge.CanBufferAttack) bufferedAttack = true;
             return;
+        }
+        TryAttack();
+    }
+
+    public bool TryAttack()
+    {
+        if (!CanAttack)
+            return false;
         
         hitTargets.Clear();
         state = CombatState.Attacking;
         if(animator != null)
             animator.SetTrigger(Attack);
+        return true;
     }
 
     // Attack 애니메이션 종료시 호출
@@ -173,10 +195,17 @@ public sealed class PlayerCombat : MonoBehaviour
         hitboxActive = false;
         recoilRemaining = 0f;
         state = CombatState.Idle;
+        bufferedAttack = false;
+        if (animator != null)
+        {
+            animator.ResetTrigger(Attack);
+            animator.SetBool(Recoiling, false);
+        }
     }
 
     private void OnDisable()
     {
+        CancelAttackForDodge();
         if (attackAction == null)
             return;
 
