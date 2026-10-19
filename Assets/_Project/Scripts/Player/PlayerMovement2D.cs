@@ -9,18 +9,30 @@ public sealed class PlayerMovement2D : MonoBehaviour
     private static readonly int Jump = Animator.StringToHash("Jump");
     private static readonly int VerticalSpeed = Animator.StringToHash("verticalSpeed");
     private static readonly int WallSlide = Animator.StringToHash("IsWallSlide");
-    
-    [Header("Components")]
-    [SerializeField] private SpriteRenderer spriteRenderer;
-    [SerializeField] private Animator animator;
-    [Header("Ground Check")]
-    [SerializeField] private Transform groundCheck;
-    [SerializeField] private Vector2 groundCheckSize = new Vector2(0.3f, 0.1f);
-    [SerializeField] private LayerMask groundLayer;
-    [Header("Movement Settings")]
+
+    [Header("이동 및 점프")]
+    [Tooltip("초당 월드 이동 거리입니다. 반동·공격·패링 중에는 일반 이동이 제한됩니다.")]
     [SerializeField, Min(0f)] private float moveSpeed = 5f;
+    [Tooltip("점프 시작 시 적용하는 위쪽 속도입니다. 점프 높이는 Rigidbody2D의 중력 설정에도 영향을 받습니다.")]
     [SerializeField, Min(0f)] private float jumpSpeed = 8f;
+
+    [Header("벽 미끄러짐")]
+    [Tooltip("초당 월드 거리. 공중에서 벽을 향해 이동할 때 제한되는 최대 낙하 속도입니다.")]
     [SerializeField, Min(0.1f)] private float wallSlideSpeed = 3f;
+
+    [Header("지면 판정")]
+    [Tooltip("월드 단위. 발밑 지면 판정 사각형의 가로(X)·세로(Y) 크기입니다.")]
+    [SerializeField] private Vector2 groundCheckSize = new Vector2(0.3f, 0.1f);
+    [Tooltip("발밑 지면 판정의 중심 위치입니다. 위치를 옮기면 착지 판정이 달라집니다.")]
+    [SerializeField] private Transform groundCheck;
+    [Tooltip("바닥과 벽으로 인식할 레이어입니다.")]
+    [SerializeField] private LayerMask groundLayer;
+
+    [Header("애니메이션 연결")]
+    [Tooltip("이동 방향에 따라 좌우 반전할 캐릭터 스프라이트입니다.")]
+    [SerializeField] private SpriteRenderer spriteRenderer;
+    [Tooltip("이동·점프·낙하 상태를 전달할 애니메이터입니다.")]
+    [SerializeField] private Animator animator;
 
     private Rigidbody2D body;
     private readonly Collider2D[] groundHits = new Collider2D[8];

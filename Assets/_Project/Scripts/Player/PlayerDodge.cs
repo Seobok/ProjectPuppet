@@ -10,12 +10,23 @@ public sealed class PlayerDodge : MonoBehaviour
     private static readonly int Dodging = Animator.StringToHash("isDodging");
     private static readonly int Jump = Animator.StringToHash("Jump");
 
-    [SerializeField] private AnimationClip dodgeAnimation;
+    [Header("회피 이동")]
+    [Tooltip("월드 단위. 회피 이동 구간 동안 이동하는 총 거리입니다. 이동 시간과 함께 회피 속도를 결정합니다.")]
     [SerializeField, Min(0f)] private float distance = 2.5f;                //이동거리
+    [Tooltip("초. 회피로 이동하는 시간입니다. 실제 적용 시간은 최소 한 물리 프레임입니다.")]
     [SerializeField, Min(0f)] private float moveDuration = 0.20f;           //이동시간 (최소 한 물리 프레임)
+
+    [Header("회피 판정 및 회복")]
+    [Tooltip("초. 회피 시작부터 피해를 무시하는 시간입니다. 이동 시간보다 길게 설정해도 이동 구간까지만 무적입니다.")]
     [SerializeField, Min(0f)] private float invulnerableDuration = 0.14f;   //무적시간
+    [Tooltip("초. 회피 이동이 끝난 뒤 다음 일반 행동까지 기다리는 시간입니다. 무적은 별도로 계산됩니다.")]
     [SerializeField, Min(0f)] private float recoveryDuration = 0.08f;       //후딜
+
+    [Header("연결 및 통과 대상")]
+    [Tooltip("회피 중 몸 충돌을 무시할 적 레이어입니다. 공격 판정과는 별개입니다.")]
     [SerializeField] private LayerMask enemyBodyLayers = 1 << 9;         //충돌 무시 레이어
+    [Tooltip("이동 시간과 회복 시간의 합에 맞춰 재생 속도를 조정할 회피 애니메이션입니다.")]
+    [SerializeField] private AnimationClip dodgeAnimation;
 
     private Rigidbody2D body;
     private SpriteRenderer sprite;

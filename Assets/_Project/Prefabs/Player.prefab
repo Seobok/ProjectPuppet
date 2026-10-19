@@ -48,6 +48,7 @@ GameObject:
   - component: {fileID: 496196302250898268}
   - component: {fileID: 8729223337675825854}
   - component: {fileID: 1604892647522854948}
+  - component: {fileID: 6550053762590832382}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -228,7 +229,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 56db2f9d2c394df499fdd0f9e7a9a327, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInputReader
   inputActions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
 --- !u!114 &1604892647522854948
@@ -241,12 +242,36 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2446d8538c77c4d45828d2dcf2bb5517, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   recoilDuration: 0.25
   attackBufferDuration: 0.1
+  parryBufferDuration: 0.1
   hurtDuration: 0.2
   attackTimeout: 2
+--- !u!114 &6550053762590832382
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1450032061898963819}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 145b74883fc93f14da69d34b4c4db446, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerParry
+  windowDuration: 0.12
+  recoveryDuration: 0.18
+  onParryStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onParrySucceeded:
+    m_PersistentCalls:
+      m_Calls: []
+  onParryFailed:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &4014819215827543371
 GameObject:
   m_ObjectHideFlags: 0
