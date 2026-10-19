@@ -9,6 +9,11 @@ public enum PlayerActionState { Normal, Attack, Dodge, Recoil, Hurt, Dead, Parry
 [RequireComponent(typeof(PlayerParry))]
 public sealed class PlayerController : MonoBehaviour
 {
+    private static readonly int Hurt = Animator.StringToHash("Hurt");
+    private static readonly int IsHurt = Animator.StringToHash("isHurt");
+    private static readonly int IsDead = Animator.StringToHash("isDead");
+    private static readonly int HurtSpeed = Animator.StringToHash("HurtSpeed");
+    private Animator animator;
 
     [Header("반동 및 피격")]
     [Tooltip("초. 공격이 적에게 패링된 뒤 공격·패링·걷기가 제한되는 시간입니다. 회피는 가능합니다.")]
@@ -46,6 +51,7 @@ public sealed class PlayerController : MonoBehaviour
         dodge = GetComponent<PlayerDodge>();
         health = GetComponent<PlayerHealth>();
         parry = GetComponent<PlayerParry>();
+        animator = GetComponentInChildren<Animator>();
     }
     private void OnEnable() => health.Damaged += OnDamaged;
     private void OnDisable()
@@ -171,6 +177,11 @@ public sealed class PlayerController : MonoBehaviour
         Transition(dead ? PlayerActionState.Dead : PlayerActionState.Hurt);
         remaining = hurtDuration;
         input.Clear();
+        if (animator != null)
+        {
+            animator.ResetTrigger(Hurt);
+            if (!dead) animator.SetTrigger(Hurt);
+        }
     }
     private void Transition(PlayerActionState next)
     {
@@ -181,5 +192,12 @@ public sealed class PlayerController : MonoBehaviour
         bufferedAttack = false;
         bufferedParry = false;
         State = next;
+        if (animator != null)
+        {
+            animator.SetBool(IsHurt, next == PlayerActionState.Hurt);
+            animator.SetBool(IsDead, next == PlayerActionState.Dead);
+            if (next == PlayerActionState.Hurt)
+                animator.SetFloat(HurtSpeed, 1f / Mathf.Max(Time.fixedDeltaTime, hurtDuration));
+        }
     }
 }
