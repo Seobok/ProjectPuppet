@@ -20,7 +20,7 @@ public sealed class EnemyHealth : MonoBehaviour, IAttackReceiver
 
     private Rigidbody2D body;
     private Collider2D[] bodyColliders;
-    private EnemyGuard guard;
+    private IAttackGuard guard;
 
     public int CurrentHealth { get; private set; }
     public int MaxHealth => maxHealth;
@@ -33,7 +33,7 @@ public sealed class EnemyHealth : MonoBehaviour, IAttackReceiver
         CurrentHealth = maxHealth;
         body = GetComponent<Rigidbody2D>();
         bodyColliders = GetComponentsInChildren<Collider2D>();
-        guard = GetComponent<EnemyGuard>();
+        guard = GetComponent<IAttackGuard>();
     }
 
     public AttackResult ReceiveAttack(AttackInfo attack)

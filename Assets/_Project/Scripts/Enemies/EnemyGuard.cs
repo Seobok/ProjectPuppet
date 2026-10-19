@@ -2,7 +2,7 @@ using UnityEngine;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(EnemyHealth), typeof(EnemyMovement2D))]
-public sealed class EnemyGuard : MonoBehaviour
+public sealed class EnemyGuard : MonoBehaviour, IAttackGuard
 {
 
     [Header("정면 판정")]
