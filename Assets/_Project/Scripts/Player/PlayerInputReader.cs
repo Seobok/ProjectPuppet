@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Collections.Generic;
 
 [DisallowMultipleComponent]
 [DefaultExecutionOrder(-300)]
@@ -12,6 +13,7 @@ public sealed class PlayerInputReader : MonoBehaviour
     private InputActionAsset runtimeActions;
     private InputAction move, jump, attack, dodge, parry;
     private bool jumpRequested, attackRequested, dodgeRequested, parryRequested;
+    public string BindingGroup { get; private set; } = "Keyboard&Mouse";
     public float Horizontal => isActiveAndEnabled && move != null ? move.ReadValue<Vector2>().x : 0f;
 
     private void Awake()
@@ -28,6 +30,7 @@ public sealed class PlayerInputReader : MonoBehaviour
         attack = runtimeActions.FindAction("Player/Attack", true);
         dodge = runtimeActions.FindAction("Player/Dodge", true);
         parry = runtimeActions.FindAction("Player/Parry", true);
+        move.performed += TrackDevice;
         jump.performed += OnJump;
         attack.performed += OnAttack;
         dodge.performed += OnDodge;
@@ -35,10 +38,30 @@ public sealed class PlayerInputReader : MonoBehaviour
     }
 
     private void OnEnable() => runtimeActions?.FindActionMap("Player", true).Enable();
-    private void OnJump(InputAction.CallbackContext _) => jumpRequested = true;
-    private void OnAttack(InputAction.CallbackContext _) => attackRequested = true;
-    private void OnDodge(InputAction.CallbackContext _) => dodgeRequested = true;
-    private void OnParry(InputAction.CallbackContext _) => parryRequested = true;
+    private void TrackDevice(InputAction.CallbackContext context) => BindingGroup = context.control.device is Gamepad ? "Gamepad" : "Keyboard&Mouse";
+    private void OnJump(InputAction.CallbackContext context) { TrackDevice(context); jumpRequested = true; }
+    private void OnAttack(InputAction.CallbackContext context) { TrackDevice(context); attackRequested = true; }
+    private void OnDodge(InputAction.CallbackContext context) { TrackDevice(context); dodgeRequested = true; }
+    private void OnParry(InputAction.CallbackContext context) { TrackDevice(context); parryRequested = true; }
+
+    public string GetBindingLabel(string actionName)
+    {
+        var action = (runtimeActions != null ? runtimeActions : inputActions)?.FindAction("Player/" + actionName);
+        if (action == null) return actionName;
+        string label = action.GetBindingDisplayString(group: BindingGroup);
+        if (!string.IsNullOrWhiteSpace(label)) return label;
+        // This asset assigns groups to composite parts rather than the composite root.
+        var parts = new List<string>();
+        for (int i = 0; i < action.bindings.Count; i++)
+        {
+            var binding = action.bindings[i];
+            if (!binding.isPartOfComposite || (binding.name != "left" && binding.name != "right") ||
+                string.IsNullOrEmpty(binding.groups) || !binding.groups.Contains(BindingGroup)) continue;
+            string part = action.GetBindingDisplayString(i);
+            if (!string.IsNullOrWhiteSpace(part) && !parts.Contains(part)) parts.Add(part);
+        }
+        return parts.Count > 0 ? string.Join(" / ", parts) : actionName;
+    }
 
     public void Consume(out bool jumpPressed, out bool attackPressed, out bool dodgePressed)
     {

@@ -18,7 +18,9 @@ public sealed class PlayerHealth : MonoBehaviour, IAttackReceiver
     
     private PlayerController controller;
     public event Action<bool> Damaged;
+    public event Action<AttackResult> AttackResolved;
     public int CurrentHealth { get; private set; }
+    public int MaxHealth => maxHealth;
     public bool IsDead => CurrentHealth <= 0;
 
     private void Awake()
@@ -32,17 +34,32 @@ public sealed class PlayerHealth : MonoBehaviour, IAttackReceiver
         if (!isActiveAndEnabled || IsDead || attack.Damage <= 0 || attack.Attacker == gameObject)
             return AttackResult.Ignored;
         if (controller != null && controller.IsInvulnerable)
+        {
+            AttackResolved?.Invoke(AttackResult.Evaded);
             return AttackResult.Evaded;
+        }
         var parry = GetComponent<PlayerParry>();
-        if (parry != null && parry.TryReceive(attack)) return AttackResult.Parried;
+        if (parry != null && parry.TryReceive(attack))
+        {
+            AttackResolved?.Invoke(AttackResult.Parried);
+            return AttackResult.Parried;
+        }
 
         CurrentHealth = Mathf.Max(0, CurrentHealth - attack.Damage);
         Damaged?.Invoke(IsDead);
         onHit.Invoke();
         if (IsDead) onDeath.Invoke();
+        AttackResolved?.Invoke(AttackResult.Hit);
         
         Debug.Log("CurrentHealth = " + CurrentHealth);
         
         return AttackResult.Hit;
+    }
+
+    public bool HealToFull()
+    {
+        if (IsDead) return false;
+        CurrentHealth = maxHealth;
+        return true;
     }
 }
