@@ -23,6 +23,8 @@ public sealed class EnemyMovement2D : MonoBehaviour
     [SerializeField] private LayerMask groundLayer = 1 << 8;
     [Tooltip("방향 전환 시 좌우 반전할 적 스프라이트입니다. 비워 두면 자식에서 찾습니다.")]
     [SerializeField] private SpriteRenderer spriteRenderer;
+    [Tooltip("반전하지 않은 원본 그림이 왼쪽을 향하면 켭니다. 이동과 공격 판정 방향에는 영향을 주지 않습니다.")]
+    [SerializeField] private bool spriteFacesLeft;
 
     private Rigidbody2D body;
     private CapsuleCollider2D capsule;
@@ -39,7 +41,7 @@ public sealed class EnemyMovement2D : MonoBehaviour
         body = GetComponent<Rigidbody2D>();
         capsule = GetComponent<CapsuleCollider2D>();
         if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-        FacingDirection = spriteRenderer != null && spriteRenderer.flipX ? -1 : 1;
+        FacingDirection = spriteRenderer != null && (spriteRenderer.flipX != spriteFacesLeft) ? -1 : 1;
         groundFilter = new ContactFilter2D { useTriggers = false };
         groundFilter.SetLayerMask(groundLayer);
     }
@@ -48,30 +50,38 @@ public sealed class EnemyMovement2D : MonoBehaviour
     {
         if (Mathf.Abs(horizontalOffset) < 0.1f) return;
         FacingDirection = horizontalOffset > 0f ? 1 : -1;
-        if (spriteRenderer != null) spriteRenderer.flipX = FacingDirection < 0;
+        if (spriteRenderer != null) spriteRenderer.flipX = (FacingDirection < 0) != spriteFacesLeft;
     }
 
     public void Move(float horizontalOffset, float remainingDistance, float deltaTime)
     {
         Face(horizontalOffset);
-        if (!body.simulated || !capsule.enabled || !CanAdvance(FacingDirection))
+        float speed = Mathf.Min(moveSpeed, Mathf.Max(0f, remainingDistance) / Mathf.Max(deltaTime, 0.0001f));
+        MoveAtSpeed(FacingDirection, speed, deltaTime);
+    }
+
+    // Used by committed attacks as well as walking. Check the next physics step before advancing.
+    public void MoveAtSpeed(int direction, float speed, float deltaTime)
+    {
+        Face(direction);
+        speed = Mathf.Max(0f, speed);
+        if (!body.simulated || !capsule.enabled || !CanAdvance(FacingDirection, speed * deltaTime))
         {
             Stop();
             return;
         }
-        float speed = Mathf.Min(moveSpeed, Mathf.Max(0f, remainingDistance) / Mathf.Max(deltaTime, 0.0001f));
         body.linearVelocity = new Vector2(FacingDirection * speed, body.linearVelocity.y);
         IsMoving = speed > 0.01f;
     }
 
-    private bool CanAdvance(int direction)
+    private bool CanAdvance(int direction, float travel)
     {
         Bounds bounds = capsule.bounds;
         Vector2 front = new Vector2(bounds.center.x + direction * (bounds.extents.x + 0.01f), bounds.center.y);
-        if (Physics2D.Raycast(front, Vector2.right * direction, groundFilter, hits, wallCheckDistance) > 0) return false;
+        if (Physics2D.Raycast(front, Vector2.right * direction, groundFilter, hits, Mathf.Max(wallCheckDistance, travel)) > 0) return false;
         Vector2 foot = new Vector2(bounds.center.x, bounds.min.y + 0.1f);
         if (Physics2D.Raycast(foot, Vector2.down, groundFilter, hits, groundCheckDepth) == 0) return false;
-        foot.x += direction * (bounds.extents.x + ledgeLookAhead);
+        foot.x += direction * (bounds.extents.x + Mathf.Max(ledgeLookAhead, travel));
         return Physics2D.Raycast(foot, Vector2.down, groundFilter, hits, groundCheckDepth) > 0;
     }
 
